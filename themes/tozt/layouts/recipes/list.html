@@ -1,0 +1,13 @@
+{{ partial "header.html" . }}
+
+{{ .Content }}
+
+<ul>
+  {{ range (where .Data.Pages "Section" "!=" "") }}
+  <li>
+    <a href="{{ .URL }}">{{ .Title | markdownify }}</a>
+  </li>
+  {{ end }}
+</ul>
+
+{{ partial "footer.html" . }}
