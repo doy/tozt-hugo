@@ -1,3 +1,51 @@
-baseURL = "http://example.org/"
+baseURL = "http://new.tozt.net/"
 languageCode = "en-us"
-title = "My New Hugo Site"
+title = "Jesse Luehrs"
+theme = "tozt"
+
+newContentEditor = "vim"
+
+enableGitInfo = true
+
+[blackfriday]
+taskLists = false
+smartypants = false
+fractions = false
+smartDashes = false
+
+[menu]
+
+[[menu.main]]
+name = "about"
+url = "/"
+weight = 1
+
+[[menu.main]]
+name = "work"
+url = "/work/"
+weight = 2
+
+[[menu.main]]
+name = "projects"
+url = "/projects/"
+weight = 3
+
+[[menu.main]]
+name = "internet"
+url = "/internet/"
+weight = 4
+
+[[menu.main]]
+name = "talks"
+url = "/talks/"
+weight = 5
+
+[[menu.main]]
+name = "contact"
+url = "/contact/"
+weight = 6
+
+[[menu.main]]
+name = "blog"
+url = "/blog/"
+weight = 7

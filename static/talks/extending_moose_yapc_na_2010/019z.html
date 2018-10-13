@@ -1,0 +1,46 @@
+<html>
+<head>
+<title>019z</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<script>
+function navigate(e) {
+    var keynum = (window.event) // IE
+        ? e.keyCode
+        : e.which;
+    if (keynum == 8) {
+        window.location = "019c" + ".html";
+        return false;
+    }
+    if (keynum == 13 || keynum == 32) {
+        window.location = "020" + ".html";
+        return false;
+    }
+    if (keynum == 73 || keynum == 105) {
+        window.location = "index.html";
+        return false;
+    }
+    return true;
+}
+</script>
+</head>
+<body onkeypress="return navigate(event)">
+<pre>
+
+
+
+        every class is represented by a metaclass
+        
+        a normal perl object of the class Moose::Meta::Class
+        
+        contains attributes and methods as members (objects of Moose::Meta::Attribute and Moose::Meta::Method)
+        
+        (other stuff too, but we'll ignore that for now)
+
+
+
+
+
+
+
+</pre>
+</body>

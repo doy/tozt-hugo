@@ -1,0 +1,57 @@
+<html>
+<head>
+<title>050z.pl</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<script>
+function navigate(e) {
+    var keynum = (window.event) // IE
+        ? e.keyCode
+        : e.which;
+    if (keynum == 8) {
+        window.location = "050.pl" + ".html";
+        return false;
+    }
+    if (keynum == 13 || keynum == 32) {
+        window.location = "051.pl" + ".html";
+        return false;
+    }
+    if (keynum == 73 || keynum == 105) {
+        window.location = "index.html";
+        return false;
+    }
+    return true;
+}
+</script>
+</head>
+<body onkeypress="return navigate(event)">
+<pre>    and make it pretty
+    
+    package AtomicMethod;
+    use Moose::Exporter;
+    
+    Moose::Exporter-&gt;setup_import_methods(
+        with_meta =&gt; [qw(atomic_method)],
+    );
+    
+    sub _atomic_method_meta {
+        my ($meta) = @_;
+        Moose::Meta::Class-&gt;create_anon_class(
+            superclasses =&gt; [$meta-&gt;method_metaclass],
+            roles        =&gt; ['AtomicMethod::Role::Method'],
+            cache        =&gt; 1,
+        )-&gt;name;
+    }
+    
+    sub atomic_method {
+        my ($meta, $name, $code) = @_;
+        $meta-&gt;add_method(
+            $name =&gt; _atomic_method_meta($meta)-&gt;wrap(
+                $code,
+                name                 =&gt; $name,
+                package_name         =&gt; $meta-&gt;name,
+                associated_metaclass =&gt; $meta
+            ),
+        );
+    }
+</pre>
+</body>

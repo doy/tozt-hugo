@@ -1,0 +1,52 @@
+<html>
+<head>
+<title>054.pl</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<script>
+function navigate(e) {
+    var keynum = (window.event) // IE
+        ? e.keyCode
+        : e.which;
+    if (keynum == 8) {
+        window.location = "053.pl" + ".html";
+        return false;
+    }
+    if (keynum == 13 || keynum == 32) {
+        window.location = "055.pl" + ".html";
+        return false;
+    }
+    if (keynum == 73 || keynum == 105) {
+        window.location = "index.html";
+        return false;
+    }
+    return true;
+}
+</script>
+</head>
+<body onkeypress="return navigate(event)">
+<pre>    package Command::Role::Class;
+    use Moose::Role;
+    
+    sub get_all_commands {
+        my ($self) = @_;
+        grep { Moose::Util::does_role($_, 'Command::Role::Method') }
+             $self-&gt;get_all_methods;
+    }
+    
+    sub has_command {
+        my ($self, $name) = @_;
+        my $method = $self-&gt;find_method_by_name($name);
+        return unless $method;
+        return Moose::Util::does_role($method, 'Command::Role::Method');
+    }
+    
+    sub get_command {
+        my ($self, $name) = @_;
+        my $method = $self-&gt;find_method_by_name($name);
+        return unless $method;
+        return Moose::Util::does_role($method, 'Command::Role::Method')
+             ? $method
+             : ();
+    }
+</pre>
+</body>

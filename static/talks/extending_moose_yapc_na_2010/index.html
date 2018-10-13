@@ -1,0 +1,97 @@
+<html>
+<head>
+<title>Extending Moose</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<script>
+function navigate(e) {
+    var keynum = (window.event) // IE
+        ? e.keyCode
+        : e.which;
+    if (keynum == 13 || keynum == 32) {
+        window.location = "001.html";
+        return false;
+    }
+    return true;
+}
+</script>
+<style>
+body {
+    font-family: sans-serif;
+}
+h4 {
+    color: #888;
+}
+</style>
+</head>
+<body>
+<h4>Use SPACEBAR to peruse the slides or click one to start...<h4>
+<h1>Extending Moose</h1>
+<ul>
+<li><a href="001.html">Extending Moose</a></li>
+<li><a href="002.html">motivation</a></li>
+<li><a href="003.html">moose</a></li>
+<li><a href="004.html">using only the basic features doesn't gain you much</a></li>
+<li><a href="005.pl.html">package Foo;</a></li>
+<li><a href="006.pl.html">package Foo;</a></li>
+<li><a href="007.pl.html">but...</a></li>
+<li><a href="008.html">moose gives you more than this</a></li>
+<li><a href="009.html">but the real power of moose is in extensibility</a></li>
+<li><a href="010.html">typical object systems are defined in terms of, well, object systems</a></li>
+<li><a href="011.html">code should be written with the intent of communicating with *humans*</a></li>
+<li><a href="012.html">this has different levels:</a></li>
+<li><a href="013.html">perl:</a></li>
+<li><a href="014.html">moose (by default):</a></li>
+<li><a href="015.html">but what we'd really like is:</a></li>
+<li><a href="016.html">moose can give us this too</a></li>
+<li><a href="017.html">the mop</a></li>
+<li><a href="018.html">models classes as objects</a></li>
+<li><a href="019.html">every class is represented by a metaclass</a></li>
+<li><a href="020.html">Moose::Meta::Class</a></li>
+<li><a href="021.html">access these objects through Class-&gt;meta (a class method installed by &quot;use Moose&quot;)</a></li>
+<li><a href="022.html">class information is stored and manipulated through these objects</a></li>
+<li><a href="023.html">also provides informational methods</a></li>
+<li><a href="024.html">and provides other functionality specific to the mop</a></li>
+<li><a href="025.html">Moose::Meta::Attribute</a></li>
+<li><a href="026.html">accessed through $meta-&gt;get_attribute, etc</a></li>
+<li><a href="027.html">informational methods:</a></li>
+<li><a href="028.html">accessing data handled by the attribute</a></li>
+<li><a href="029.html">Moose::Meta::Method</a></li>
+<li><a href="030.html">accessed through $meta-&gt;get_method, etc</a></li>
+<li><a href="031.html">so how does this all work?</a></li>
+<li><a href="032.html">metacircularity</a></li>
+<li><a href="033.html">metaclasses are instances of the class Moose::Meta::Class</a></li>
+<li><a href="034.html">this is accomplished by two tricks</a></li>
+<li><a href="035.html">compiler bootstrapping</a></li>
+<li><a href="036.html">Moose::Meta::Class has a metaclass, but it's also a Moose::Meta::Class</a></li>
+<li><a href="037.html">but this is mostly irrelevant</a></li>
+<li><a href="038.html">the idea to take away is that moose is built on top of moose</a></li>
+<li><a href="039.html">so we have this foundation, but how can we make this easy to use?</a></li>
+<li><a href="040.html">Moose::Exporter</a></li>
+<li><a href="041.html">we have __PACKAGE__-&gt;meta-&gt;add_attribute(foo =&gt; (is =&gt; 'ro'))</a></li>
+<li><a href="042.html">Moose::Exporter is a wrapper around Sub::Exporter providing moose-specific functionality</a></li>
+<li><a href="043.html">Moose itself uses Moose::Exporter</a></li>
+<li><a href="044.html">so the key here is that all of these metaclasses can be customized, and Moose::Exporter can wrap those customizations to make them pretty</a></li>
+<li><a href="045.html">basic extensions don't even need to alter the metaclass</a></li>
+<li><a href="046.pl.html">package FileAttributes;</a></li>
+<li><a href="047.pl.html">package Foo;</a></li>
+<li><a href="048.html">but altering metaclasses can provide more powerful abstractions</a></li>
+<li><a href="049.pl.html">package AtomicMethod::Role::Method;</a></li>
+<li><a href="050.pl.html">and make it pretty</a></li>
+<li><a href="051.pl.html">package Foo;</a></li>
+<li><a href="052.html">combining metaclass alterations can be even more powerful</a></li>
+<li><a href="053.pl.html">package Command::Role::Method;</a></li>
+<li><a href="054.pl.html">package Command::Role::Class;</a></li>
+<li><a href="055.pl.html">package Command;</a></li>
+<li><a href="056.pl.html">package Foo;</a></li>
+<li><a href="057.pl.html">package My::App;</a></li>
+<li><a href="058.html">for larger projects, providing a custom exporter can simplify things greatly</a></li>
+<li><a href="059.pl.html">package Mooose;</a></li>
+<li><a href="060.html">the positive side</a></li>
+<li><a href="061.html">these things are easily packaged up into standalone modules</a></li>
+<li><a href="062.html">any questions?</a></li>
+</ul>
+<p>This presentation was generated by <a
+href="http://ingydotnet.github.com/vroom-pm">Vroom</a>. Use &lt;SPACE&gt; key to go
+forward and &lt;BACKSPACE&gt; to go backwards.
+</p>
+</body>

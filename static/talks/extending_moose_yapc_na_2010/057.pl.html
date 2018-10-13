@@ -1,0 +1,46 @@
+<html>
+<head>
+<title>057.pl</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<script>
+function navigate(e) {
+    var keynum = (window.event) // IE
+        ? e.keyCode
+        : e.which;
+    if (keynum == 8) {
+        window.location = "056.pl" + ".html";
+        return false;
+    }
+    if (keynum == 13 || keynum == 32) {
+        window.location = "058" + ".html";
+        return false;
+    }
+    if (keynum == 73 || keynum == 105) {
+        window.location = "index.html";
+        return false;
+    }
+    return true;
+}
+</script>
+</head>
+<body onkeypress="return navigate(event)">
+<pre>
+    package My::App;
+    use Moose;
+    use Foo;
+    
+    sub run {
+        my ($self, $cmd) = @_;
+        if (Foo-&gt;meta-&gt;has_command($cmd)) {
+            Foo-&gt;new-&gt;$cmd;
+        }
+        elsif ($cmd eq 'cmdlist') {
+            print join ', ', map { $_-&gt;name } Foo-&gt;meta-&gt;get_all_commands;
+        }
+    }
+
+
+
+
+</pre>
+</body>

@@ -1,0 +1,366 @@
+---- config
+title: OX - The hardest working two letters in Perl
+indent: 4
+height: 28
+width: 80
+skip: 0
+vimrc: colorscheme zellner
+
+---- center
+
+OX
+The hardest working two letters in Perl
+
+Jesse Luehrs, Infinity Interactive
+
+http://github.com/stevan/OX/
+
+----
+
+== history
+
++* custom app-specific stuff
++* CGI::Application
++* Catalyst
++* Plack
+
+---- center
+
+OX - the web anti-framework
+
+---- center
+
+== Stevan
+
+----
+
+== what is OX?
+
++* Bread::Board
++* Path::Router
++* Plack
++* EXPERIMENTAL
+
+---- perl,i4
+
+---- include app.psgi
+
+----
+
+Bread::Board
++control your object's construction
+
+----
+
+Bread::Board has containers, containers contain services
++an OX application is a Bread::Board container
++all application objects are services in the container
+
+----
+
+services can depend on other services
++dependencies are resolved first
++passed as constructor parameters to the requested service
+
+----
+
+at minimum, the router and the app coderef itself are services
+
+---- perl,i4
+
+package App;
+use OX;
+
+has model => (is => 'ro', isa => 'Model');
+has view  => (is => 'ro', isa => 'View');
+has controller => (
+    is           => 'ro',
+    isa          => 'Controller',
+    dependencies => ['model', 'view'],
+);
+
+router as {
+    route '/'         => 'root.index';
+    route '/inc'      => 'root.inc';
+    route '/dec'      => 'root.dec';
+    route '/reset'    => 'root.reset';
+    route '/set/:num' => 'root.set', (
+        num => { isa => 'Int' },
+    );
+}, (root => 'controller');
+
+__PACKAGE__->meta->make_immutable;
+1;
+
+---- perl,i4
+
+package Controller;
+use Moose;
+
+has view  => (is => 'ro', isa => 'View',  required => 1);
+has model => (is => 'ro', isa => 'Model', required => 1);
+
+sub index { }
+sub inc   { my $self = shift; $self->model->inc }
+sub dec   { my $self = shift; $self->model->dec }
+sub reset { my $self = shift; $self->model->reset }
+sub set   { my $self = shift; $self->model->set($_[1]) }
+
+around [qw(index inc dec set reset)] => sub {
+    my $orig = shift;
+    my $self = shift;
+    $self->$orig(@_);
+    return $self->view->render($self->model->count);
+};
+
+__PACKAGE__->meta->make_immutable;
+1;
+
+----
+
+Path::Router
++translate incoming urls into structured data
++also translate structured data into urls
+
+---- perl,i4
+
+route '/set/:num' => 'root.set', (
+    num => { isa => 'Int' },
+);
+
+----
+
+/set/23 -> { num => 23 }
++not just the hashref, but also the code to call for this path
+
+----
+
+bidirectional
+
+---- perl,i4
+
+$router->uri_for({num => 23}); # '/set/23'
+
+----
+
+this translation is controlled by OX, and is pluggable
++already seen examples
++route '/' => sub { ... }
+route '/' => 'root.index'
+
+---- perl,i4
+
+has root => (is => 'ro', isa => 'Controller');
+
+router ['HTTPMethod'] => as {
+    route '/' => 'root';
+}, (root => 'root');
+
+----
+
+GET request for '/' will call Controller::get
++POST request for '/' will call Controller::post
+
+----
+
+this is just the sugar layer
+
+---- perl,i4
+
+package App;
+use OX;
+
+sub configure_router { ... }
+
+----
+
+or, you can replace the router entirely
+
+---- perl,i4
+
+router 'My::Custom::Router::Class';
+
+----
+
+Plack
+
+----
+
+OX applications provide the Plack::Component api
++->prepare_app
+->call
+->to_app
+
+----
+
+two types of middleware
++deployment (Stacktrace, ReverseProxy)
++app-specific (Session)
+
+----
+
+your application class should be able to declare app-specific middleware
+
+---- perl,i4
+
+router as {
+    wrap 'Plack::Middleware::Session';
+    route '/' => ...;
+};
+
+---- perl,i4
+
+has session_store => (
+    is    => 'ro',
+    isa   => 'Str',
+    value => 'File',
+);
+
+router as {
+    wrap 'Plack::Middleware::Session' => (
+        store => 'session_store',
+    );
+    route '/' => ...;
+};
+
+----
+
+again, this is just the sugar layer
+
+---- perl,i4
+
+package App;
+use Moose;
+extends 'OX::Application';
+
+sub configure_router {
+    ...
+}
+
+sub app_from_router {
+    ...
+}
+
+---- perl,i4
+
+package App;
+use Moose;
+use Bread::Board;
+extends 'OX::Application';
+
+sub BUILD {
+    my $self = shift;
+    container $self => as {
+        ...
+    };
+}
+
+sub configure_router {
+    ...
+}
+
+sub app_from_router {
+    ...
+}
+
+----
+
+benefits of OX
+
+----
+
+reuse
++no wrapper classes required
+
+---- perl,i4
+
+package App;
+use OX;
+
+has model => (is => 'ro', isa => 'KiokuX::Model');
+has view  => (is => 'ro', isa => 'Template');
+
+...
+
+---- perl,i4
+
+package App;
+use OX;
+
+has dsn   => (is => 'ro', isa => 'Str', default => 'dbi:sqlite:app.sqlite');
+has root  => (is => 'ro', isa => 'Str', default => 'root/templates');
+
+has model => (
+    is           => 'ro',
+    isa          => 'KiokuX::Model',
+    dependencies => ['dsn'],
+);
+has view => (
+    is           => 'ro',
+    isa          => 'Template',
+    dependencies => { INCLUDE_PATH => 'root' },
+);
+
+...
+
+----
+
+application classes are decoupled, and can be used independently
+
+---- perl,i4
+
+App->new->model
+
+----
+
+get the model object exactly as it would be initialized within the app
++except without initializing the app
++very useful for standalone scripts
+
+----
+
+App->new(dsn => 'dbi:SQLite::memory:')->to_app
+
+----
+
+override specific bits of the application at initialization time
++makes testing very easy
++simple way to fit in mock objects, or adjust configuration for tests
+
+----
+
+the entire structure is just building on existing technology
++applications can use roles and inheritance
++middleware just works
++components are just normal classes, can be built however you want
+
+----
+
+TODO
+
+----
+
+nested applications need work
++in particular, how can services be shared?
+
+----
+
+bread::board subcontainers
++need a syntax for this
+
+----
+
+more extensible routebuilders
++want a way to let the controller object control the dispatching
+
+----
+
+cleaner underlying foundation
++more ways to customize the router
++more ways to customize the container
+
+---- center
+
+Any questions?
+
+http://github.com/stevan/OX/

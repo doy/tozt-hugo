@@ -1,0 +1,52 @@
+<html>
+<head>
+<title>040.pl</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<script>
+function navigate(e) {
+    var keynum = (window.event) // IE
+        ? e.keyCode
+        : e.which;
+    if (keynum == 8) {
+        window.location = "039.pl" + ".html";
+        return false;
+    }
+    if (keynum == 13 || keynum == 32) {
+        window.location = "041" + ".html";
+        return false;
+    }
+    if (keynum == 73 || keynum == 105) {
+        window.location = "index.html";
+        return false;
+    }
+    return true;
+}
+</script>
+</head>
+<body onkeypress="return navigate(event)">
+<pre>
+
+                                       OX
+
+package MyApp;
+use OX;
+
+has model =&gt; (is =&gt; 'ro', isa =&gt; 'Model');
+has view  =&gt; (is =&gt; 'ro', isa =&gt; 'View');
+
+has controller =&gt; (
+    is    =&gt; 'ro',
+    isa   =&gt; 'Controller',
+    infer =&gt; 1,
+);
+
+router as {
+    route '/' =&gt; 'controller.index';
+};
+
+
+
+
+
+</pre>
+</body>

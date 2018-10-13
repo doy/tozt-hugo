@@ -1,0 +1,508 @@
+# urxvt -fg black -bg white
+# setfont 'xft:DejaVuSansMono-19:bold'
+# echo 'set exrc' >> ~/.vimrc
+
+---- config
+title: Dependency Injection with Bread::Board
+indent: 4
+auto_size: 1
+
+---- center
+Dependency Injection with Bread::Board
+
+Jesse Luehrs
+Infinity Interactive
+doy@cpan.org
+----
+== A Motivating Example
+---- perl,i0
+package MyApp;
+use MyFramework;
+
+sub call {
+    my $self = shift;
+
+    my $dbh = DBI->connect('dbi:mysql:myapp_db');
+    my $hello = $dbh->selectall_arrayref('SELECT * FROM my_table')->[0][0];
+
+    my $template = Template->new(INCLUDE_PATH => 'root/template');
+    $template->process('hello.tt', { hello => $hello }, \(my $output));
+
+    return $output;
+}
+---- perl,i0
+package MyApp;
+use MyFramework;
+
+has model => (is => 'ro', isa => 'Model', default => sub { Model->new });
+has view  => (is => 'ro', isa => 'View',  default => sub { View->new });
+
+sub call {
+    my $self = shift;
+    my $hello = $self->model->get_hello;
+    return $self->view->render($hello);
+}
+---- perl,i0
+package MyApp;
+use MyFramework;
+
+has logger => (
+    is => 'ro', isa => 'Logger',
+    default => sub { Logger->new }
+);
+has model => (
+    is => 'ro', isa => 'Model', lazy => 1,
+    default => sub { Model->new(logger => $_[0]->logger) },
+);
+has view  => (
+    is => 'ro', isa => 'View', lazy => 1,
+    default => sub { View->new(logger => $_[0]->logger) },
+);
+
+sub call {
+    my $self = shift;
+    my $hello = $self->model->get_hello;
+    return $self->view->render($hello);
+}
+---- perl,i0
+package MyApp;
+use MyFramework;
+
+has dsn => (is => 'ro', isa => 'Str', default => 'dbi:mysql:myapp_db');
+has tt_root => (is => 'ro', isa => 'Str', default => 'root/template');
+has logger => (is => 'ro', isa => 'Logger', default => sub {Logger->new});
+has model => (
+    is => 'ro', isa => 'Model', lazy => 1,
+    default => sub {
+        my $m = Model->connect($_[0]->dsn);
+        $m->set_logger($_[0]->logger);
+        return $m;
+    },
+);
+has view  => (
+    is => 'ro', isa => 'View', lazy => 1,
+    default => sub {
+        View->new(logger => $_[0]->logger, tt_root => $_[0]->tt_root);
+    },
+);
+
+sub call { ... }
+----
+Dependency Injection
+
++ · a form of inversion of control
++ · "the inverse of garbage collection"
++ · manages object construction
+----
+Benefits to Dependency Injection
+
++ · provides access to the same object creation code
+   that your app will actually use
++ · removes need for globals
++ · testing and reuse
+---- center,-i1
+== Bread::Board
+
++ +-----------------------------------------+
+ |          A B C D E   F G H I J          |
+ |-----------------------------------------|
+ | o o |  1 o-o-o-o-o v o-o-o-o-o 1  | o o |
+ | o o |  2 o-o-o-o-o   o-o-o-o-o 2  | o o |
+ | o o |  3 o-o-o-o-o   o-o-o-o-o 3  | o o |
+ | o o |  4 o-o-o-o-o   o-o-o-o-o 4  | o o |
+ | o o |  5 o-o-o-o-o   o-o-o-o-o 5  | o o |
+ |     |  6 o-o-o-o-o   o-o-o-o-o 6  |     |
+ | o o |  7 o-o-o-o-o   o-o-o-o-o 7  | o o |
+ | o o |  8 o-o-o-o-o   o-o-o-o-o 8  | o o |
+ | o o |  9 o-o-o-o-o   o-o-o-o-o 9  | o o |
+ | o o | 10 o-o-o-o-o   o-o-o-o-o 10 | o o |
+ | o o | 11 o-o-o-o-o   o-o-o-o-o 11 | o o |
+ |     | 12 o-o-o-o-o   o-o-o-o-o 12 |     |
+ | o o | 13 o-o-o-o-o   o-o-o-o-o 13 | o o |
+ | o o | 14 o-o-o-o-o   o-o-o-o-o 14 | o o |
+ | o o | 15 o-o-o-o-o   o-o-o-o-o 15 | o o |
+ | o o | 16 o-o-o-o-o ^ o-o-o-o-o 16 | o o |
+ +-----------------------------------------+
+---- perl,i0
+== Bread::Board
+
+my $c = container MyApp => as {
+    service dsn    => 'dbi:mysql:myapp_db';
+    service logger => (class => 'Logger', lifecycle    => 'Singleton');
+    service view   => (class => 'View',   dependencies => ['logger']);
+
+    service model => (
+        class        => 'Model',
+        dependencies => ['logger', 'dsn'],
+        block        => sub {
+            my $m = Model->connect($_[0]->param('dsn'));
+            $m->set_logger($_[0]->param('logger'));
+            return $m;
+        },
+    );
+    service app => (
+        class        => 'MyApp',
+        dependencies => ['model', 'view'],
+    );
+};
+$c->resolve(service => 'app');
+----
+== Services
+
++ · represent the data you're storing
++ · access contents via the ->get method
++ · three built-in types:
+---- perl
+== Bread::Board::ConstructorInjection
+
+service view => (
+    class => 'View',
+);
+---- perl
+== Bread::Board::BlockInjection
+
+service model => (
+    class => 'Model', # optional
+    block => sub {
+        my $m = Model->new
+        $m->initialize;
+        return $m;
+    },
+);
+---- perl
+== Bread::Board::Literal
+
+service dsn => 'dbi:mysql:myapp_db';
+----
+== Containers
+
++ · hold services and other containers
++ · access contents via the ->fetch method
++   · ->resolve is a shortcut method for ->fetch(...)->get
+----
+== Dependencies
+
++ · tells Bread::Board how your classes are related
++ · specified as a map of names to service paths
+   (there are shortcuts for common cases)
+---- perl,i0
+== Dependencies
+
+service logger => (class => 'Logger');
+service view => (
+    class        => 'View',
+    dependencies => ['logger'],
+);
+---- perl,i0
+== Dependencies
+
+service dsn => 'dbi:mysql:myapp_db';
+service model => (
+    class        => 'Model',
+    dependencies => ['dsn'],
+    block        => sub {
+        my $service = shift;
+        return Model->connect($service->param('dsn'));
+    },
+);
+---- perl,i0
+== Dependencies
+
+container MyApp => as {
+    container Model => as {
+        service dsn => 'dbi:mysql:myapp_db';
+        service model => (
+            class        => 'Model',
+            dependencies => ['dsn'],
+            block        => sub {
+                my $service = shift;
+                return Model->connect($service->param('dsn'));
+            },
+        );
+    };
+    service app => (
+        class        => 'MyApp',
+        dependencies => ['Model/model'],
+    );
+};
+----
+== Parameters
+
++ · like dependencies, but supplied when calling ->get or ->resolve
+---- perl,i0
+== Parameters
+
+my $c = container MyApp => as {
+    service user => (
+        class => 'User',
+        parameters => {
+            name => { isa => 'Str' },
+        },
+    );
+};
+$c->resolve(service => 'user', parameters => { name => 'doy' });
+---- perl,i0
+== Parameters
+
+my $c = container MyApp => as {
+    service user => (
+        class => 'User',
+        parameters => {
+            name => { isa => 'Str' },
+        },
+    );
+    service superusers => (
+        block => sub { [ $_[0]->param('root') ] },
+        dependencies => {
+            root => { user => { name => 'root' } },
+        },
+    );
+};
+---- perl,i0
+== Parameters
+
+my $c = container MyApp => as {
+    service user => (
+        class => 'User',
+        parameters => {
+            name => { isa => 'Str' },
+        },
+    );
+    service superusers => (
+        block => sub {
+            [ $_[0]->param('user')->inflate(name => 'root') ]
+        },
+        dependencies => ['user'],
+    );
+};
+---- perl,i0
+== Parameters
+
+my $c = container MyApp => as {
+    service default_username => 'guest';
+    service user => (
+        class => 'User',
+        parameters => {
+            name => { isa => 'Str', optional => 1 },
+        },
+        dependencies => {
+            name => 'default_username',
+        },
+    );
+};
+# user with name 'guest'
+$c->resolve(service => 'user');
+# user with name 'doy'
+$c->resolve(service => 'user', parameters => { name => 'doy' });
+---- perl,i0
+== Parameters
+
+my $c = container MyApp => as {
+    service user => (
+        class => 'User',
+        parameters => {
+            name => { isa => 'Str', optional => 1, default => 'guest' },
+        },
+    );
+};
+# user with name 'guest'
+$c->resolve(service => 'user');
+# user with name 'doy'
+$c->resolve(service => 'user', parameters => { name => 'doy' });
+----
+== Lifecycles
+
++ · this is what determines what happens when ->get is called
++ · by default, each call to ->get creates a new object
++ · by specifying «lifecycle => 'Singleton'» when creating the service,
+   the same object will be returned each time
+---- perl,i0
+== Bread::Board
+
+my $c = container MyApp => as {
+    service dsn    => 'dbi:mysql:myapp_db';
+    service logger => (class => 'Logger', lifecycle    => 'Singleton');
+    service view   => (class => 'View',   dependencies => ['logger']);
+
+    service model => (
+        class        => 'Model',
+        dependencies => ['logger', 'dsn'],
+        block        => sub {
+            my $m = Model->connect($_[0]->param('dsn'));
+            $m->set_logger($_[0]->param('logger'));
+            return $m;
+        },
+    );
+    service app => (
+        class        => 'MyApp',
+        dependencies => ['model', 'view'],
+    );
+};
+$c->resolve(service => 'app');
+----
+== Best Practices
+
++ · only use containers during initialization
++   · factories
++ · avoid unnecessary subcontainers
++ · container classes
+---- perl,i0
+package MyApp::Container;
+use Moose;
+extends 'Bread::Board::Container';
+
+sub BUILD {
+    container $self => as {
+        ...;
+    };
+}
+---- perl,i0
+container SomethingElse => as {
+    container MyApp::Container->new;
+};
+----
+== Typemaps
+
++ · defines a mapping from a class_type to a service
++ · instead of requesting a particular service, you can request an
+   object of a particular type: $c->resolve(type => 'Model');
++ · with this, we can (mostly) infer the dependencies for a given class
+---- perl,i0
+package Model
+use Moose;
+has logger => (is => 'ro', isa => 'Logger', required => 1);
+
+package Logger;
+use Moose;
+---- perl,i0
+my $c = container MyApp => as {
+    typemap Logger => infer;
+    typemap Model => infer;
+};
+$c->resolve(type => 'Model')->logger; # a valid logger object
+----
+== Typemaps
+
++ · required attributes are automatically inferred, becoming either
+   dependencies (on types) or parameters (if the type doesn't exist
+   in the typemap)
++ · non-required attributes can still be satisfied by parameters
+---- perl,i0
+== Bread::Board::Declare
+
+package MyApp::Container;
+use Moose;
+use Bread::Board::Declare;
+
+has dsn    => (is => 'ro', isa => 'Str', value => 'dbi:mysql:myapp_db');
+has logger => (is => 'ro', isa => 'Logger');
+has view   => (is => 'ro', isa => 'View', infer => 1);
+
+has model => (
+    is           => 'ro',
+    isa          => 'Model',
+    infer        => 1,
+    dependencies => ['dsn'],
+    block        => sub {
+        my $m = Model->connect($_[0]->param('dsn'));
+        $m->set_logger($_[0]->param('logger'));
+        return $m;
+    },
+);
+has app => (is => 'ro', isa => 'MyApp', infer => 1);
+----
+== Bread::Board::Declare
+
++ · services are declared just by defining attributes
++ · attribute accessors resolve the service if no value is set
++ · if the attribute has a value, it is used in dependency resolution
++   · MyApp::Container->new(dsn => 'dbi:mysql:other_db')->model
+----
+== Bread::Board::Declare
+
++ · typemaps are much simplified
++ · attributes with class_type constraints automatically get a typemap
++ · «infer => 1» infers as many dependencies as possible
+---- perl,i0
+== MongoDBx::Bread::Board::Container
+
+container MyApp => as {
+    container MongoDBx::Bread::Board::Container->new(
+        name            => 'myapp_db',
+        host            => 'localhost',
+        database_layout => {
+            user_db => ['standard_users', 'super_users'],
+        },
+    );
+
+    service authenticator => (
+        class => 'Authenticator',
+        dependencies => ['myapp_db/user_db/standard_users'],
+    );
+};
+---- perl,i0
+== Catalyst::Plugin::Bread::Board
+
+package MyApp;
+use Catalyst 'Bread::Board';
+
+__PACKAGE__->config(
+    'Plugin::Bread::Board' => {
+        container => MyApp::Container->new,
+    }
+);
+
+---- perl,i0
+== OX
+
+package MyApp;
+use OX;
+
+has model => (is => 'ro', isa => 'Model');
+has view  => (is => 'ro', isa => 'View');
+
+has controller => (
+    is    => 'ro',
+    isa   => 'Controller',
+    infer => 1,
+);
+
+router as {
+    route '/' => 'controller.index';
+};
+
+---- center
+Questions?
+
+https://metacpan.org/module/Bread::Board
+https://metacpan.org/module/Bread::Board::Declare
+https://github.com/stevan/OX
+---- skip
+motivating example (5m, 5s)
+- everything inline
+- separate model/view classes
+- model and view classes both want a logger
+- model and logger both want configuration
+overview of dependency injection (5m, 1s)
+- high level description
+- ...???
+bread::board (15m, 4s)
+- simple example (translation of intro?)
+- services and containers
+- dependencies, parameters
+- lifecycles
+- typemaps
+- best practices
+  - not global - factory classes/closures, etc
+  - container classes
+bread::board::declare (10m)
+- show example
+- attributes are services are attributes
+- automatic typemapping
+- subclassing, roles
+- subcontainers
+real world usage (10m)
+- bread::board::container::mongodb
+- catalyst::plugin::bread::board
+- ox
+questions (5m)

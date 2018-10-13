@@ -1,0 +1,52 @@
+<html>
+<head>
+<title>035.pl</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<script>
+function navigate(e) {
+    var keynum = (window.event) // IE
+        ? e.keyCode
+        : e.which;
+    if (keynum == 8) {
+        window.location = "034z" + ".html";
+        return false;
+    }
+    if (keynum == 13 || keynum == 32) {
+        window.location = "036" + ".html";
+        return false;
+    }
+    if (keynum == 73 || keynum == 105) {
+        window.location = "index.html";
+        return false;
+    }
+    return true;
+}
+</script>
+</head>
+<body onkeypress="return navigate(event)">
+<pre>                             Bread::Board::Declare
+
+package MyApp::Container;
+use Moose;
+use Bread::Board::Declare;
+
+has dsn    =&gt; (is =&gt; 'ro', isa =&gt; 'Str', value =&gt; 'dbi:mysql:myapp_db');
+has logger =&gt; (is =&gt; 'ro', isa =&gt; 'Logger');
+has view   =&gt; (is =&gt; 'ro', isa =&gt; 'View', infer =&gt; 1);
+
+has model =&gt; (
+    is           =&gt; 'ro',
+    isa          =&gt; 'Model',
+    infer        =&gt; 1,
+    dependencies =&gt; ['dsn'],
+    block        =&gt; sub {
+        my $m = Model-&gt;connect($_[0]-&gt;param('dsn'));
+        $m-&gt;set_logger($_[0]-&gt;param('logger'));
+        return $m;
+    },
+);
+has app =&gt; (is =&gt; 'ro', isa =&gt; 'MyApp', infer =&gt; 1);
+
+
+</pre>
+</body>

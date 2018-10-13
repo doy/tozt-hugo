@@ -1,0 +1,399 @@
+---- config
+title: Extending Moose
+indent: 8
+height: 18
+width: 69
+skip: 0
+
+---- center
+Extending Moose
+
+by Jesse Luehrs (doy at tozt dot net)
+
+----
+== motivation
+----
+moose
+
++great class builder
+
++lots of beginner info available
+----
+using only the basic features doesn't gain you much
+---- perl,i4
+package Foo;
+use base qw(Class::Accessor);
+__PACKAGE__->mk_accessors('bar');
+---- perl,i4
+package Foo;
+use Moose;
+has bar => (is => 'ro');
+---- perl,i4
+but...
+
++package Foo;
+use Class::Accessor 'antlers';
+has bar => (is => 'ro');
+----
+moose gives you more than this
+
++* builders
++* delegation
++* roles
++* etc...
+----
+but the real power of moose is in extensibility
+----
+typical object systems are defined in terms of, well, object systems
+
++has input_file => (
+   is       => 'ro',
+   isa      => File,
+   coerce   => 1,
+   required => 1,
+);
+
++wouldn't it be nice to be able to say what we mean?
+
++has_file 'input_file';
+----
+code should be written with the intent of communicating with *humans*
+
++computers are great at figuring out the details on their own
+
++write code in the language of the domain rather than the language of the computer
+----
+this has different levels:
+----
+perl:
+
+a user is a hash table with a key storing the username and a key storing the password, associated with a set of functions for manipulating those hash keys while validating them and ensuring they remain consistent
+----
+moose (by default):
+
+a user has a readonly string attribute storing the username, and a read/write Authen::Passphrase object storing the password, which password checking is delegated to
+----
+but what we'd really like is:
+
+a user has a name, and you can ask if its password is correct
+----
+moose can give us this too
+----
+== the mop
+
++== (meta object protocol)
+----
+models classes as objects
+----
+every class is represented by a metaclass
+
++a normal perl object of the class Moose::Meta::Class
+
++contains attributes and methods as members (objects of Moose::Meta::Attribute and Moose::Meta::Method)
+
++(other stuff too, but we'll ignore that for now)
+----
+== Moose::Meta::Class
+----
+access these objects through Class->meta (a class method installed by "use Moose")
+----
+class information is stored and manipulated through these objects
+
++* "@ISA = ('Foo')"     -> "$meta->superclasses('Foo')"
++* "*foo = sub { ... }" -> "$meta->add_method(foo => sub { ... })"
++* "our $foo = 'bar'"   -> "$meta->add_package_symbol('$foo' => 'bar')"
+----
+also provides informational methods
+
++* $meta->class_precedence_list
++* $meta->has_method('foo')
++* $meta->does_role('Role')
+----
+and provides other functionality specific to the mop
+
++* $meta->make_immutable
++* $meta->new_object
++* Moose::Meta::Class->create_anon_class
+----
+== Moose::Meta::Attribute
+----
+accessed through $meta->get_attribute, etc
+
++stores data associated with an object
+
++also handles installing methods associated with accessing that data
+----
+informational methods:
+
++* $meta_attr->get_read_method
++* $meta_attr->type_constraint
+----
+accessing data handled by the attribute
+
++$meta_attr->get_value($obj)
+----
+== Moose::Meta::Method
+----
+accessed through $meta->get_method, etc
+
++represents a method associated with a class
+
++these are typically introspected from the symbol table, not created explicitly
+
++they can be created explicitly if necessary; this is how method modifiers work
+----
+so how does this all work?
+----
+== metacircularity
+----
+metaclasses are instances of the class Moose::Meta::Class
+
++but Moose::Meta::Class is itself a class
+
++so it must have a metaclass
+----
+this is accomplished by two tricks
+----
+compiler bootstrapping
+
++write a basic version first, replace it with the actual version once the structure is in place
+----
+Moose::Meta::Class has a metaclass, but it's also a Moose::Meta::Class
+
++so Class->meta->meta == Class->meta
+----
+but this is mostly irrelevant
+----
+the idea to take away is that moose is built on top of moose
+
++and so it can be extended just like any other moose object
+----
+so we have this foundation, but how can we make this easy to use?
+----
+== Moose::Exporter
+----
+we have __PACKAGE__->meta->add_attribute(foo => (is => 'ro'))
+
++but we'd like "has foo => (is => 'ro')"
+----
+Moose::Exporter is a wrapper around Sub::Exporter providing moose-specific functionality
+
++can curry the metaclass into helper functions
+
++can pass arguments to Moose::Util::MetaRole to customize the metaclasses
+----
+Moose itself uses Moose::Exporter
+
++'has' is a thin wrapper around __PACKAGE__->meta->add_attribute
+
++read the source to Moose.pm, it's pretty simple
+----
+so the key here is that all of these metaclasses can be customized, and Moose::Exporter can wrap those customizations to make them pretty
+----
+basic extensions don't even need to alter the metaclass
+---- perl,i4
+package FileAttributes;
+use Moose::Exporter;
+use MooseX::Types::Path::Class qw(File);
+
+Moose::Exporter->setup_import_methods(
+    with_meta => ['has_file'],
+);
+
+sub has_file {
+    my ($meta, $name, %options) = @_;
+    $meta->add_attribute(
+        $name,
+        is     => 'ro',
+        isa    => File,
+        coerce => 1,
+        %options,
+    );
+}
+---- perl,i4
+package Foo;
+use Moose;
+use FileAttributes;
+
+has_file 'foo';
+has_file 'bar' => (required => 1);
+----
+but altering metaclasses can provide more powerful abstractions
+---- perl,i4
+package AtomicMethod::Role::Method;
+use Moose::Role;
+
+around wrap => sub {
+    my ($orig, $self, $body, @args) = @_;
+    my $new_body = sub {
+        warn "locking...\n";   # or something more useful
+        my @ret = $body->(@_); # TODO: handle context properly
+        warn "unlocking...\n"; # or something more useful
+        return @ret;
+    };
+    $self->$orig($new_body, @args);
+};
+---- perl,i4
+and make it pretty
+
++package AtomicMethod;
+use Moose::Exporter;
+
+Moose::Exporter->setup_import_methods(
+    with_meta => [qw(atomic_method)],
+);
+
+sub _atomic_method_meta {
+    my ($meta) = @_;
+    Moose::Meta::Class->create_anon_class(
+        superclasses => [$meta->method_metaclass],
+        roles        => ['AtomicMethod::Role::Method'],
+        cache        => 1,
+    )->name;
+}
+
+sub atomic_method {
+    my ($meta, $name, $code) = @_;
+    $meta->add_method(
+        $name => _atomic_method_meta($meta)->wrap(
+            $code,
+            name                 => $name,
+            package_name         => $meta->name,
+            associated_metaclass => $meta
+        ),
+    );
+}
+---- perl,i4
+package Foo;
+use Moose;
+use AtomicMethod;
+
+atomic_method foo => sub {
+    warn "in foo\n";
+};
+----
+combining metaclass alterations can be even more powerful
+---- perl,i4
+package Command::Role::Method;
+use Moose::Role;
+---- perl,i4
+package Command::Role::Class;
+use Moose::Role;
+
+sub get_all_commands {
+    my ($self) = @_;
+    grep { Moose::Util::does_role($_, 'Command::Role::Method') }
+         $self->get_all_methods;
+}
+
+sub has_command {
+    my ($self, $name) = @_;
+    my $method = $self->find_method_by_name($name);
+    return unless $method;
+    return Moose::Util::does_role($method, 'Command::Role::Method');
+}
+
+sub get_command {
+    my ($self, $name) = @_;
+    my $method = $self->find_method_by_name($name);
+    return unless $method;
+    return Moose::Util::does_role($method, 'Command::Role::Method')
+         ? $method
+         : ();
+}
+---- perl,i4
+package Command;
+use Moose::Exporter;
+
+Moose::Exporter->setup_import_methods(
+    with_meta => ['command'],
+    class_metaroles => {
+        class => ['Command::Role::Class'],
+    },
+);
+
+sub _command_method_meta {
+    my ($meta) = @_;
+    Moose::Meta::Class->create_anon_class(
+        superclasses => [$meta->method_metaclass],
+        roles        => ['Command::Role::Method'],
+        cache        => 1,
+    )->name;
+}
+
+sub command {
+    my ($meta, $name, $code) = @_;
+    $meta->add_method(
+        $name => _command_method_meta($meta)->wrap(
+            $code,
+            name                 => $name,
+            package_name         => $meta->name,
+            associated_metaclass => $meta
+        ),
+    );
+}
+---- perl,i4
+package Foo;
+use Moose;
+use Command;
+
+command bar => sub { ... };
+---- perl,i4
+package My::App;
+use Moose;
+use Foo;
+
+sub run {
+    my ($self, $cmd) = @_;
+    if (Foo->meta->has_command($cmd)) {
+        Foo->new->$cmd;
+    }
+    elsif ($cmd eq 'cmdlist') {
+        print join ', ', map { $_->name } Foo->meta->get_all_commands;
+    }
+}
+----
+for larger projects, providing a custom exporter can simplify things greatly
+---- perl,i4
+package Mooose;
+use Moose::Exporter;
+use MooseX::NonMoose ();
+use MooseX::Aliases ();
+
+my ($import, $unimport, $init_meta) = Moose::Exporter->build_import_methods(
+    also => ['MooseX::NonMoose', 'MooseX::Aliases'],
+    class_metaroles => {
+        class => ['My::App::Meta::Class'],
+    },
+);
+
+sub import {
+    strict->import;
+    warnings->import;
+    autodie->import;
+    feature->import(':5.10');
+    MooseX::Aliases->import;
+    goto $import;
+}
+
+sub unimport {
+    # .... (s/import/unimport/ on the above)
+    goto $unimport;
+}
+
+sub init_meta {
+    my ($package, %options) = @_;
+    die unless $options{for_class}->isa('My::Base::Class');
+    goto $init_meta;
+}
+----
+the positive side
+----
+these things are easily packaged up into standalone modules
+
++* MooseX::FileAttributes
++* MooseX::TransactionalMethods
++* IM::Engine::Plugin::Commands
++* Blawd::OO, TAEB::OO, etc...
+---- center
+any questions?
