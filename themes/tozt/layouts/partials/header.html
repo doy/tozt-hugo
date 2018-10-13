@@ -9,12 +9,21 @@
   </head>
 
   <body>
-    <h1><span class="title">{{ .Site.Title | markdownify }}</span></h1>
+    <header class="page">
+      <div>
+      <div class="name"><h1>{{ .Site.Title | markdownify }}</h1></div>
+      <img src="/sphtkr.jpg" width=80 height=80 class="icon" />
+      </div>
+      <div class="clear"></div>
+    </header>
     <nav>
     <ul class="menu">
-      {{ range .Site.Menus.main }}
-      <li><a href="{{ .URL | relURL }}">{{ .Name }}</a></li>
+      {{ $page := $}}
+      {{ range $menu := .Site.Menus.main }}
+      <li{{ if eq $page.URL $menu.URL }} class="active"{{ end }}>
+        <a href="{{ $menu.URL | relURL }}">{{ .Name }}</a>
+      </li>
       {{ end }}
     </ul>
-    <hr/>
     </nav>
+    <main>

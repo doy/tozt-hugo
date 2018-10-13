@@ -1,5 +1,5 @@
 ---
-title: "Jesse Luehrs"
+title: "about me"
 ---
 
 I am a programmer, currently working for [Stripe](https://stripe.com/).

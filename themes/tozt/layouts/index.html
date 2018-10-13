@@ -1,7 +1,11 @@
 {{ partial "header.html" . }}
 
-<main>
+<header class="body">
+<h2>{{ .Title }}</h2>
+</header>
+
+<article>
 {{ .Content }}
-</main>
+</article>
 
 {{ partial "footer.html" . }}

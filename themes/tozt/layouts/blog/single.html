@@ -1,10 +1,12 @@
 {{ partial "header.html" . }}
 
+<header class="body">
 <h2>{{ .Title }}</h2>
-<h3>{{ .Date.Format "Mon, Jan 2, 2006" }}</h3>
+<div class="postdate">{{ .Date.Format "Mon, Jan 2, 2006" }}</div>
+</header>
 
-<main>
+<article>
 {{ .Content }}
-</main>
+</article>
 
 {{ partial "footer.html" . }}
