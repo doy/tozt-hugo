@@ -49,3 +49,8 @@ weight = 6
 name = "blog"
 url = "/blog/"
 weight = 7
+
+[[menu.main]]
+name = "git"
+url = "https://git.tozt.net/"
+weight = 8
