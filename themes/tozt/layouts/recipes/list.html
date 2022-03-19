@@ -5,7 +5,7 @@
 <ul>
   {{ range (where .Data.Pages "Section" "!=" "") }}
   <li>
-    <a href="{{ .URL }}">{{ .Title | markdownify }}</a>
+    <a href="{{ .RelPermalink }}">{{ .Title | markdownify }}</a>
   </li>
   {{ end }}
 </ul>

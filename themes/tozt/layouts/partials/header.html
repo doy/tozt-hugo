@@ -20,7 +20,7 @@
     <ul class="menu">
       {{ $page := $}}
       {{ range $menu := .Site.Menus.main }}
-      <li{{ if eq $page.URL $menu.URL }} class="active"{{ end }}>
+      <li{{ if eq $page.RelPermalink $menu.URL }} class="active"{{ end }}>
         <a href="{{ $menu.URL | relURL }}">{{ .Name }}</a>
       </li>
       {{ end }}
