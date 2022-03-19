@@ -2,7 +2,6 @@
 title: "work"
 ---
 
-I currently work for Stripe and am not actively seeking employment. My (not
-particularly up to date) resume can be found here:
+I am not currently employed, and am actively looking for a programming job.
 
 [My resume](/resume.pdf) ([LaTeX source](/resume.tex), [plaintext](/resume.txt))

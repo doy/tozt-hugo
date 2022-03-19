@@ -2,7 +2,7 @@
 title: "about me"
 ---
 
-I am a programmer, currently working for [Stripe](https://stripe.com/).
+I am a programmer, most recently at [Stripe](https://stripe.com/) (and currently [looking for a job](/resume.pdf)!).
 
 I was a member of the Fall 1 2014 batch at the [Recurse Center](https://recurse.com/).
 
