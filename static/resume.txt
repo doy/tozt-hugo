@@ -1,110 +1,167 @@
-Jesse P Luehrs
-==============
-Address: 702 W. Green St., Apt #2
-         Urbana, IL 61801
+Jesse Luehrs
+============
+Address: 142 E. 16th St. #19D
+         New York, NY, 10003
 Phone:   (618) 616-6287
 Email:   doy@tozt.net
 Website: http://tozt.net/
 
+===============
+Work Experience
+===============
+Stripe (https://stripe.com/)
+Remote
+Staff Engineer
+January 2015 - June 2021
+- Moved our CI infrastructure from a proprietary system to Jenkins. This
+  included rewriting the testing infrastructure of our main monolith to run
+  tests in parallel with process isolation to allow for better reproducibility
+  and the ability to scale out automatically to many worker machines. This was
+  able to reduce turnaround time for tests by over 80\%, and provided a path to
+  scaling out to more machines to keep test times down.
+- Converted all of our internal infrastructure to use an installation of
+  Confidant (https://lyft.github.io/confidant/) for secrets storage and
+  distribution, giving us much more control over which people and machines had
+  access to our secrets.
+- Implemented an authentication service which allowed users to sign arbitrary
+  data as their own identity in a way that machines could independently verify.
+  This allowed us to remove almost all use of GPG at Stripe, which eliminated a
+  large class of tooling issues related to deployments.
+- Contributed to importing all of our low level infrastructure which had
+  originally been set up via custom tooling (or by hand) into Terraform,
+  allowing us to (mostly) automate creation of new AWS accounts.
+- Contributed to our rollout of Envoy for service-to-service communication,
+  giving us automatic, transparent mutual TLS for almost all internal traffic.
+  Additionally, used features provided by Envoy to implement a blue/green
+  deploy mechanism which greatly improved speed and reliability of deploys for
+  our critical services.
+- Implemented a fleetwide service in go for running maintenance commands on
+  servers (running puppet, restarting services, etc), which reduced the time
+  needed for running these types of commands from several days in some cases to
+  under 5 minutes. Additionally, designed a secure protocol for these types of
+  actions which ensured that the end services would not perform any actions
+  without first ensuring that the request was logged in a separate secure
+  append-only logging system.
+
+Infinity Interactive (https://iinteractive.com/)
+Remote
+Senior Programmer
+February 2010 - August 2014
+- Maintained a large, legacy codebase which handled employee engagement survey
+  registration and reporting for several large companies.
+- Wrote and deployed many small websites for clients, using Perl and
+  Javascript.
+- Developed and maintained various open source projects used in our client
+  work, including Moose and Plack (see below).
+
+UIUC Hydrogeology Lab (https://www.gwb.com/)
+Urbana, IL
+Visiting Research Programmer
+February 2006 - February 2010
+- Worked on the Geochemists' Workbench, a geochemistry software suite written
+  in C++ and Tcl/Tk.
+- Added support for several new image output formats including SVG and PDF, and
+  added features to existing ones, including adding font embedding support to
+  our PostScript output.
+- Contributed to adding parallel processing support to several scientific
+  calculations, using OpenMP.
+- Ported our calculation applications from Windows to Linux, to allow them to
+  be run on large supercomputing clusters.
+- Implemented a testing framework for our calculation applications, using
+  Perl's Test::More.
+
+===========
+Open Source
+===========
+A more complete list of my projects can be found on my website
+(https://tozt.net/projects.html and https://git.tozt.net/). All of my personal
+open source work is also available on GitHub (https://github.com/doy), and you
+can also find my Rust open source work on crates.io
+(https://crates.io/users/doy) and my Perl open source work on MetaCPAN
+(https://metacpan.org/author/DOY).
+
+nbsh (https://github.com/doy/nbsh): 2021 - present
+    I am currently developing an advanced new shell using Rust and Tokio which
+    integrates aspects of terminal multiplexers to provide a user experience
+    more similar to notebooks (such as Jupyter) than traditional shells.
+
+rbw (https://github.com/doy/rbw): 2020 - present
+    I wrote and maintain rbw, an unofficial command-line client for the
+    Bitwarden password manager. rbw is written in Rust, and uses a background
+    agent (in a similar style to ssh-agent or gpg-agent) to keep credentials
+    persistently in memory.
+
+Reply (https://github.com/doy/reply): 2013 - 2016
+    I wrote Reply, a lightweight and extensible REPL for Perl. It includes many
+    useful features such as tab completion and history support.
+
+Dungeon Crawl Stone Soup (https://crawl.develz.org/): 2009 - 2016
+    I was a member of the development team for Dungeon Crawl Stone Soup, a
+    roguelike game written in C++ and Lua. I contributed several features to
+    the game and was also the release manager for the 0.6 release.
+
+Plack (https://plackperl.org/): 2012 - 2013
+    I was a member of the core development team for PSGI and Plack, the
+    specification for Perl web server/application interaction (similar to
+    Python's WSGI and Ruby's Rack).
+
+Perl (https://www.perl.org/): 2011 - 2013
+    I was the release manager for the 5.17.1 development release of Perl, and I
+    have also contributed many bug fixes. I was also a lead developer on the
+    p5-mop project, a prototype of a new object system for Perl.
+
+Moose (https://metacpan.org/dist/Moose): 2009 - 2013
+    I was a member of the development team for Moose, which provides advanced
+    object orientation capabilities to Perl. I was also the release manager
+    from 2011 - 2012.
+
+TAEB (https://taeb.github.io/): 2008 - 2011
+    I was one of the lead framework developers for TAEB, a Perl framework for
+    programmatic interaction with the game NetHack. I was also the primary
+    developer for the leading bot written with TAEB framework.
+
 =========
 Education
 =========
+Recurse Center
+New York, NY
+Student
+September 2014 - November 2014
+
 University of Illinois at Urbana-Champaign, College of Engineering
 Urbana, IL
-Bachelor of Science in Computer Science
-Aug. 2004 - May 2008
+Bachelor of Science in Computer Science with Minor in Mathematics
+August 2004 - May 2008
 - Overall GPA: 3.61, Technical GPA: 3.81
 - James Scholar in Engineering (2004 - 2005)
 - Dean's List (Fall 2004 - Fall 2006)
 - Graduated with Honors
 
-===============
-Work Experience
-===============
-UIUC Hydrogeology Lab
-Urbana, IL
-Visiting Research Programmer
-February 2006 - present
-- Worked on the Geochemists' Workbench, a geochemistry software suite
-  written in C++ and Tcl/Tk.
-- Added or enhanced support for several different image output formats
-  including PDF, SVG, and PostScript, including adding TrueType font
-  embedding to PDF and PostScript files.
-- Helped add parallel processing support to several scientific
-  calculations, using OpenMP.
-- Designed a new XML-based configuration file format for our
-  applications.
-- Ported our calculation applications to Linux, to allow them to be run
-  on large clusters.
-- Implemented a testing framework for our calculation applications in
-  Perl, using Test::More.
+=====
+Talks
+=====
+Slides and videos (where available) for these talks can be found at
+http://tozt.net/talks.html.
 
-Smile-A-While Amusements
-Traveling, Illinois/Indiana/Missouri
-Concessions manager
-Summer 2004 and 2005
-- Managed several amusement games on the Luehrs' Ideal Rides carnival.
+Introduction to Rust (50 min): YAPC::NA 2014
+    This talk describes the Rust programming language, touching on its major
+    features and design philosophies that make it interesting.
 
-========
-Projects
-========
-Moose (http://moose.perl.org/): 2009 - Present
-- Member of the Moose Cabal, the lead development team for Moose.
-- Wrote several extensions for Moose, including MooseX::NonMoose, which
-  allows classes built with Moose to easily interoperate with other
-  types of classes, and MooseX::Aliases, which allows Moose attributes
-  to be referred to by different names.
+Dependency Injection with Bread::Board (50 min): YAPC::NA 2012, YAPC::EU 2012
+    This talk provides an overview of dependency injection, and gives concrete
+    examples of it using the Bread::Board and Bread::Board::Declare Perl
+    modules.
 
-Bot::Games (http://github.com/doy/bot-games): 2009 - Present
-- Bot::Games is an IRC bot framework written in Perl, designed for
-  multiplayer game moderation.
-- Uses Moose extensively to provide a clean and extensible plugin system
-  for adding games.
+OX - the hardest working two letters in Perl (50 min): YAPC::NA 2011
+    This talk describes the OX web framework for Perl (mentioned above in the
+    Projects section), including a conceptual overview and usage examples.
 
-TAEB (http://taeb.sartak.org/): 2008 - Present
-- TAEB is a Perl framework (using Moose) for programmatic interaction
-  with NetHack (http://nethack.org/).
-- Primary developer for the leading AI written for TAEB.
-- Developed several standalone Perl modules in the course of
-  development, including Graph::Implicit, which implements several
-  useful graph algorithms, and IO::Pty::Easy, which provides a simple
-  read/write interface for interacting with pseudo-terminals.
-
-Smithy (http://sourceforge.net/projects/smithy/): 2008
-- Smithy is a cross-platform map editor for the Aleph One engine
-  (http://marathon.sourceforge.net/), written in OCaml.
-- Contributed several GUI improvements, including writing custom widgets
-  using LablGTK.
-
-System for Defining, Documenting and Recording Game Events
-  (http://volition-inc.com/): 2007 - 2008
-- This is a library written in C which can be added to games in order to
-  track arbitrary events and report them to a remote server, for use in
-  gameplay testing.
-
-LuaIRC (http://luaforge.net/projects/luairc/): 2006 - 2008
-- LuaIRC is a fully-featured IRC framework written in Lua.
-- Supports all standard IRC functionality, including CTCP and DCC.
+Extending Moose (50 min): YAPC::NA 2010
+    This talk goes into detail describing Moose's meta object protocol,
+    including what it is, how it works, and how you can extend it.
 
 ======
 Skills
 ======
-Languages:
-- Proficient in C, C++, Perl (CPAN id: DOY), Lua, Bash, OCaml
-- Working knowledge of Ruby, Tcl/Tk, JavaScript, LaTeX, HTML/CSS,
-  PostScript, sed
-Operating Systems:
-- Linux (Arch, Debian, Gentoo)
-- Windows (2000, XP)
-Tools:
-- Make, Vim, Microsoft Visual Studio, Cygwin, Darcs, Subversion, Git
-
-==========
-Activities
-==========
-Inline Insomniacs:
-- I was the webmaster for the Inline Insomniacs rollerblading club from
-  2005 until 2007.
-Falling Illini:
-- I was a member of the Falling Illini skydiving club from 2007 until
-  2008.
+Languages: I am fluent in Rust, Ruby, Go, C, Perl, Lua, and shell.
+Tools: git, vim, make, Jenkins, Terraform, Puppet, Docker
